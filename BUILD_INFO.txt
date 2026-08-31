@@ -1,0 +1,16 @@
+Analysis Power — Basalte-Web
+Version: 5.1.0 MERCHANT
+Build: MERCHANT FRIENDLY / DECISION FIRST
+
+Objectif : un commerçant doit comprendre chaque alerte en quelques secondes sans connaître les calculs.
+
+Principes v5.1 :
+- chaque alerte = ce qui se passe → pourquoi → que faire → voir les faits ;
+- aucun score causal affiché dans les vues commerciales ;
+- aucune hypothèse faible affichée comme cause ;
+- facteurs externes interdits comme cause directe d’un produit/vendeur/client isolé ;
+- événements génériques retirés des causes : un simple écart de nombre d’événements ne suffit plus ;
+- travaux affichés uniquement avec convergence géographique/temporelle/commerciale et source officielle ;
+- jargon statistique relégué à Détails & audit ;
+- vues zones, diagnostics et causes réécrites pour un usage magasin immédiat ;
+- données TGM toujours traitées localement dans le navigateur.

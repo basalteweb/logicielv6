@@ -1,0 +1,30 @@
+ANALYSIS POWER 5.1 MERCHANT — RAPPORT DE VALIDATION
+
+Contrôles exécutés avant livraison :
+- test_public_context.py : OK
+- test_causal_context.js : OK
+- test_power_causality.js : OK
+- test_merchant_rules.js : OK
+- syntaxe JavaScript js/*.js + sw.js : OK
+- compilation Python scripts/*.py : OK
+- validation data/public-context.json : OK
+
+Régression sur les extractions TGM de référence (données non incluses dans le paquet) :
+- Clients lus : 1 341
+- Lignes de ventes : 15 446
+- Transactions reconstruites : 5 668
+- Références catalogue lues : 1 077
+- Diagnostics utiles générés : 29
+- Clients très en retard : 121
+- Produits / stocks à sécuriser : 59
+- Causes suffisamment solides visibles sur ce jeu : 1
+
+Contrôles commerçant-friendly :
+- un simple écart du nombre d'événements ne peut plus devenir une cause ;
+- un produit isolé ne peut pas être attribué directement à météo / travaux / parking / T2C / événements ;
+- un chantier qui commence après une baisse déjà installée n'est pas retenu sans aggravation observée autour de sa date ;
+- les scores causaux et calculs internes ne sont pas affichés dans les vues commerciales ;
+- une cause trop faible devient « Cause non identifiée » ;
+- les sources officielles restent consultables lorsqu'elles sont réellement utilisées.
+
+Limite de validation : l'environnement d'exécution bloque l'ouverture automatisée de pages locales dans Chromium par politique d'organisation. Les moteurs, imports, tests, syntaxe, ressources locales et règles de restitution ont été contrôlés séparément.
