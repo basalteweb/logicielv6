@@ -1,0 +1,435 @@
+# Ne jamais versionner les extractions TGM ni les données clients
+*.csv
+*.xlsx
+*.xls
+*.ods
+*.zip
+.DS_Store
+Thumbs.db
+
+__pycache__/
+*.pyc
+
+
+Analysis Power — Basalte-Web
+Version: 5.1.0 MERCHANT
+Build: MERCHANT FRIENDLY / DECISION FIRST
+
+Objectif : un commerçant doit comprendre chaque alerte en quelques secondes sans connaître les calculs.
+
+Principes v5.1 :
+- chaque alerte = ce qui se passe → pourquoi → que faire → voir les faits ;
+- aucun score causal affiché dans les vues commerciales ;
+- aucune hypothèse faible affichée comme cause ;
+- facteurs externes interdits comme cause directe d’un produit/vendeur/client isolé ;
+- événements génériques retirés des causes : un simple écart de nombre d’événements ne suffit plus ;
+- travaux affichés uniquement avec convergence géographique/temporelle/commerciale et source officielle ;
+- jargon statistique relégué à Détails & audit ;
+- vues zones, diagnostics et causes réécrites pour un usage magasin immédiat ;
+- données TGM toujours traitées localement dans le navigateur.
+
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0c1117">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://data.geopf.fr; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
+  <meta name="description" content="Analysis Power — pilotage commercial clair et actionnable conçu par Basalte-Web.">
+  <title>Analysis Power — Basalte-Web</title>
+  <link rel="stylesheet" href="css/styles.css?v=5.1.0">
+  <link rel="stylesheet" href="css/power.css?v=5.1.0">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+  <div id="fatal" class="fatal hidden"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">AU</div>
+      <div>
+        <strong>Analysis Power</strong>
+        <span>Pilotage commercial · Basalte-Web</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" data-open-store><span aria-hidden="true">⌖</span> <span id="storeProfileBadge">Configurer le commerce</span></button>
+      <span id="dataRangeBadge" class="pill muted">Aucune donnée</span>
+      <button id="openImportBtn" class="btn btn-primary">Importer / actualiser</button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar" aria-label="Navigation principale">
+      <nav id="mainNav">
+        <button class="nav-item active" data-view="dashboard"><span>◫</span>Vue générale</button>
+        <button class="nav-item nav-autopilot" data-view="autopilot"><span>⚡</span>Contrôles automatiques</button>
+        <button class="nav-item nav-geo" data-view="geo"><span>⌖</span>Autour du commerce</button>
+        <button class="nav-item nav-intelligence" data-view="intelligence"><span>✦</span>À faire maintenant</button>
+        <button class="nav-item nav-context" data-view="context"><span>⛓</span>Pourquoi ça bouge ?</button>
+        <button class="nav-item" data-view="clients"><span>◎</span>Clients</button>
+        <button class="nav-item" data-view="alerts"><span>!</span>Opportunités</button>
+        <button class="nav-item" data-view="fidelity"><span>↻</span>Fidélisation</button>
+        <button class="nav-item" data-view="products"><span>◇</span>Produits</button>
+        <button class="nav-item" data-view="rayons"><span>▦</span>Rayons</button>
+        <button class="nav-item" data-view="stock"><span>▤</span>Stock</button>
+        <button class="nav-item" data-view="salesforce"><span>♙</span>Équipe & remises</button>
+        <button class="nav-item" data-view="calendar"><span>◷</span>Saisonnalité</button>
+        <button class="nav-item" data-view="associations"><span>⌘</span>Associations</button>
+        <button class="nav-item" data-view="compare"><span>⇄</span>Comparateur</button>
+        <button class="nav-item" data-view="quality"><span>✓</span>Détails & audit</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="privacy-note"><strong>Mode local</strong><br>Les données importées restent dans ce navigateur.</div>
+        <button id="clearDataBtn" class="btn btn-ghost btn-small">Effacer les données locales</button>
+        <small>Analysis Power <span id="versionLabel"></span></small>
+      </div>
+    </aside>
+
+    <main id="mainContent" class="main-content">
+      <section class="empty-state power-empty" id="emptyState">
+        <div class="empty-logo">AP</div>
+        <div class="power-tagline">PILOTAGE COMMERCIAL · CLAIR ET ACTIONNABLE</div>
+        <h1>Analysis Power</h1>
+        <p>Power transforme les données TGM en réponses simples : ce qui change, pourquoi quand on peut le prouver, et quoi faire maintenant.</p>
+        <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary btn-large" id="emptyImportBtn">Lancer une analyse</button>
+          <button class="btn btn-large" data-open-store>Configurer le commerce</button>
+        </div>
+        <p class="small-muted">Clients.xlsx · Ventes.csv · Catalogue.xlsx · traitement local des données clients.</p>
+      </section>
+      <div id="viewRoot" class="hidden"></div>
+    </main>
+  </div>
+
+  <div id="importModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card import-modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">IMPORT TGM SÉCURISÉ</span>
+          <h2 id="importTitle">Charger les données</h2>
+          <p>Chaque source est validée séparément. Le croisement n’est lancé qu’après validation des trois.</p>
+        </div>
+        <button class="icon-btn" data-close-modal aria-label="Fermer">×</button>
+      </div>
+
+      <div class="import-grid">
+        <article class="import-card" data-import-card="clients">
+          <div class="import-step">1</div>
+          <h3>Base clients</h3>
+          <p>Fichier <strong>clients</strong>, avec ou sans suffixe numérique entre parenthèses.</p>
+          <label class="file-button">Sélectionner Clients.xlsx<input id="clientsFile" type="file" accept=".xlsx,.xls"></label>
+          <div class="progress"><i id="clientsProgress"></i></div>
+          <div id="clientsStatus" class="import-status neutral">En attente</div>
+        </article>
+
+        <article class="import-card" data-import-card="ventes">
+          <div class="import-step">2</div>
+          <h3>Ventes</h3>
+          <p>Un ou plusieurs fichiers <strong>ventes.csv</strong>. Si plusieurs exports se recouvrent, Power évite automatiquement de compter deux fois la même vente.</p>
+          <label class="file-button">Sélectionner Ventes.csv<input id="ventesFile" type="file" accept=".csv" multiple></label>
+          <div class="progress"><i id="ventesProgress"></i></div>
+          <div id="ventesStatus" class="import-status neutral">En attente</div>
+        </article>
+
+        <article class="import-card" data-import-card="catalogue">
+          <div class="import-step">3</div>
+          <h3>Catalogue / stock</h3>
+          <p>Fichier <strong>catalogue</strong>, avec ou sans suffixe numérique entre parenthèses.</p>
+          <label class="file-button">Sélectionner Catalogue.xlsx<input id="catalogueFile" type="file" accept=".xlsx,.xls"></label>
+          <div class="progress"><i id="catalogueProgress"></i></div>
+          <div id="catalogueStatus" class="import-status neutral">En attente</div>
+        </article>
+      </div>
+
+      <div id="crossStatus" class="cross-status">
+        <div class="cross-icon">⧉</div>
+        <div><strong>En attente des fichiers</strong><p>Ajoute Clients, Ventes et Catalogue. Power vérifiera ensuite que tout correspond correctement.</p></div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="privacy-inline">🔒 Traitement local : aucune ligne client n’est envoyée à Basalte-Web, GitHub ou un serveur d’analyse.</div>
+        <button id="runAnalysisBtn" class="btn btn-primary btn-large" disabled>Lancer l’analyse</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="storeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="storeTitle">
+    <div class="modal-backdrop" data-close-store></div>
+    <div class="modal-card store-modal-card">
+      <div class="modal-header">
+        <div><span class="eyebrow">CONTEXTE AUTOUR DU COMMERCE</span><h2 id="storeTitle">Profil du point de vente</h2><p>Une adresse suffit pour vérifier automatiquement les travaux, accès, transports et événements utiles autour du magasin.</p></div>
+        <button class="icon-btn" data-close-store aria-label="Fermer">×</button>
+      </div>
+      <div class="store-grid">
+        <div class="store-field"><label for="storeName">Nom du point de vente</label><input id="storeName" autocomplete="organization" placeholder="Mon commerce"></div>
+        <div class="store-field full"><label for="storeAddress">Adresse complète</label><input id="storeAddress" autocomplete="street-address" placeholder="109 avenue Edouard Michelin, 63100 Clermont-Ferrand"></div>
+        <div class="store-field"><label for="radiusImmediate">Rayon immédiat (m)</label><input id="radiusImmediate" type="number" min="25" step="25" value="100"></div>
+        <div class="store-field"><label for="radiusCommercial">Zone commerciale (m)</label><input id="radiusCommercial" type="number" min="100" step="50" value="500"></div>
+        <div class="store-field"><label for="radiusExtended">Zone étendue (m)</label><input id="radiusExtended" type="number" min="250" step="100" value="2000"></div>
+      </div>
+      <div id="storeGeoStatus" class="store-geo-status">Adresse à géocoder</div>
+      <div class="modal-footer"><div class="privacy-inline">L’adresse du commerce est géocodée via le service public Géoplateforme/BAN et sauvegardée localement dans ce navigateur.</div><button id="saveStoreBtn" class="btn btn-primary">Enregistrer et vérifier autour du magasin</button></div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-close-detail></div>
+    <div class="modal-card detail-card">
+      <button class="icon-btn detail-close" data-close-detail aria-label="Fermer">×</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <div id="toastRoot" class="toast-root"></div>
+
+  <script src="js/constants.js?v=5.1.0"></script>
+  <script src="js/utils.js?v=5.1.0"></script>
+  <script src="js/csv.js?v=5.1.0"></script>
+  <script src="js/xlsx-lite.js?v=5.1.0"></script>
+  <script src="js/importer.js?v=5.1.0"></script>
+  <script src="js/storage.js?v=5.1.0"></script>
+  <script src="js/geo.js?v=5.1.0"></script>
+  <script src="js/intelligence.js?v=5.1.0"></script>
+  <script src="js/autopilot.js?v=5.1.0"></script>
+  <script src="js/analytics.js?v=5.1.0"></script>
+  <script src="js/public-context.js?v=5.1.0"></script>
+  <script src="js/causal-context.js?v=5.1.0"></script>
+  <script src="js/power.js?v=5.1.0"></script>
+  <script src="js/ui.js?v=5.1.0"></script>
+  <script src="js/app.js?v=5.1.0"></script>
+</body>
+</html>
+
+Analysis Power — Copyright (c) 2026 Basalte-Web.
+Tous droits réservés.
+
+Le code de cette application est fourni pour l'usage et le déploiement du propriétaire du projet.
+Les bibliothèques tierces chargées par l'application conservent leurs licences respectives.
+
+{
+  "name": "Analysis Power — Basalte-Web",
+  "short_name": "Analysis Power",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#070a0f",
+  "theme_color": "#070a0f",
+  "lang": "fr",
+  "description": "Pilotage commercial clair et actionnable à partir des extractions TGM / Rezomatic."
+}
+
+# Analysis Power — Basalte-Web
+
+**Version 5.1.0 MERCHANT** — pilotage commercial local pour les extractions TGM / Rezomatic.
+
+Analysis Power a été conçu autour d'une règle simple : **le commerçant ne doit pas avoir besoin de comprendre les calculs pour comprendre son magasin**.
+
+Le moteur peut effectuer des contrôles complexes en arrière-plan ; l'interface restitue toujours :
+
+> **Ce qui se passe → Pourquoi ? → Que faire ? → Voir les faits**
+
+## Ce que Power fait
+
+Après l'import de Clients, Ventes et Catalogue, Power :
+
+- vérifie que les fichiers peuvent être reliés sans ambiguïté bloquante ;
+- compare chiffre d'affaires, tickets, panier, marge, clients, produits, rayons et stock ;
+- détecte les clients qui tardent réellement par rapport à leur propre rythme ;
+- repère les produits qui progressent, reculent, risquent de manquer ou se vendent très peu ;
+- analyse les zones d'origine des clients ;
+- confronte les problèmes commerciaux au contexte local disponible ;
+- propose des actions classées par priorité ;
+- conserve les preuves détaillées dans l'audit.
+
+## Interface commerçant
+
+Les vues principales n'affichent pas les scores causaux, coefficients, seuils ou formules internes.
+
+Chaque carte doit être compréhensible immédiatement :
+
+- **Ce qui se passe** : constat en français courant ;
+- **Pourquoi ?** : cause retenue si elle est suffisamment solide ;
+- **Que faire ?** : prochaine action concrète ;
+- **Voir les faits** : données précises utilisées pour conclure.
+
+Si aucune cause n'est assez solide, Power affiche explicitement **« Cause non identifiée »**.
+
+Les calculs et hypothèses rejetées restent dans **Détails & audit**.
+
+Voir `docs/MERCHANT_UX.md` pour les règles complètes.
+
+## Causalité : règle de sécurité
+
+Une information extérieure peut être collectée sans être présentée comme une cause.
+
+Un chantier, un événement, la météo, le stationnement ou T2C ne remontent dans une explication que lorsqu'ils sont cohérents avec le type de problème, le lieu, la période et les données commerciales observées.
+
+### Travaux
+
+Pour afficher un chantier comme explication, Power demande notamment :
+
+- une source officielle ou suffisamment fiable ;
+- une période exploitable ;
+- une concordance avec la zone touchée ;
+- une preuve de fréquentation autour du chantier **ou** une restriction d'accès forte et proche ;
+- une cohérence avec le mouvement commercial observé.
+
+Le descriptif officiel est conservé séparément de l'interprétation Power.
+
+### Produits
+
+Une baisse d'un produit isolé ne peut pas être directement attribuée aux travaux, à la météo, au parking, à T2C ou au simple nombre d'événements locaux. Power recherche d'abord les explications métier : clients acheteurs, quantité, prix, stock, substitution vers une autre référence, famille et rayon.
+
+## Local Context Engine
+
+Le profil du point de vente contient son nom et son adresse. L'adresse du **commerce** peut être géocodée via Géoplateforme / Base Adresse Nationale afin de mesurer la proximité des informations publiques.
+
+Le collecteur fourni avec cette édition utilise notamment, selon disponibilité :
+
+- Clermont Auvergne Métropole Open Data ;
+- pages officielles des travaux ;
+- agenda public ;
+- T2C GTFS-RT ;
+- stationnement ;
+- C.vélo / comptages ;
+- Open-Meteo ;
+- calendrier Zone A / jours fériés.
+
+Les adresses clients ne sont jamais envoyées aux services publics de géocodage.
+
+## Import TGM
+
+Fichiers acceptés :
+
+- `Clients.xlsx`, `Clients(3).xlsx`, etc. ;
+- un ou plusieurs `Ventes.csv`, `Ventes(1).csv`, etc. ;
+- `Catalogue.xlsx`, `Catalogue(14).xlsx`, etc.
+
+Les fichiers TGM sont traités localement dans le navigateur. Ils ne sont pas envoyés à GitHub ou Basalte-Web.
+
+## Confidentialité
+
+- données Clients / Ventes / Catalogue : traitement local navigateur ;
+- stockage local possible via IndexedDB ;
+- `.gitignore` bloque CSV/XLS/XLSX/ODS/ZIP pour limiter les commits accidentels ;
+- l'adresse du commerce peut être envoyée au géocodeur public ;
+- aucune adresse client n'est transmise aux API publiques.
+
+## Installation GitHub Pages
+
+1. Mettre tout le contenu du dossier à la racine du dépôt.
+2. Vérifier `config/store.json` si le collecteur planifié doit utiliser une adresse précise.
+3. Activer GitHub Pages sur `main` / `/ (root)`.
+4. Dans Actions, lancer une première fois **Analysis Power · Local Context Sentinel**.
+5. Si le workflow doit mettre à jour les JSON : `Settings → Actions → General → Workflow permissions → Read and write permissions`.
+6. Vérifier que l'application affiche **v5.1.0 MERCHANT**.
+
+Aucune compilation front-end n'est nécessaire.
+
+## Tests fournis
+
+- `node tests/test_causal_context.js`
+- `node tests/test_power_causality.js`
+- `node tests/test_merchant_rules.js`
+- `python tests/test_public_context.py`
+- `python scripts/validate_public_context.py`
+- `node --check js/*.js sw.js`
+- `python -m py_compile scripts/*.py`
+
+`test_merchant_rules.js` empêche notamment le retour de deux faux raisonnements :
+
+1. un simple écart du nombre d'événements locaux ne peut pas devenir une cause ;
+2. un chantier ne peut pas être retenu uniquement parce qu'il se trouve dans le bon secteur alors que la baisse commerciale avait déjà commencé avant lui.
+
+# Sécurité et confidentialité — Analysis Power 5.0
+
+## Données TGM
+
+Les fichiers Clients, Ventes et Catalogue sont lus localement dans le navigateur. Ils ne sont pas téléversés vers Basalte-Web, GitHub ni les sources publiques.
+
+Le `.gitignore` bloque notamment CSV, XLS, XLSX, ODS et ZIP afin de réduire le risque d’envoi accidentel d’une extraction.
+
+## Adresse du commerce
+
+Seule l’adresse du **point de vente** peut être transmise au service public Géoplateforme/BAN pour géocodage. Le profil est ensuite sauvegardé localement dans le navigateur.
+
+Le collecteur GitHub Actions utilise l’adresse placée volontairement dans `config/store.json`.
+
+## Adresses clients
+
+Aucune adresse client n’est envoyée à Géoplateforme, aux APIs publiques ou à GitHub. La classification géographique des clients reste dans le navigateur.
+
+## Sources publiques
+
+Le Local Context Sentinel collecte uniquement des données publiques : travaux/voirie, agenda, mobilité, stationnement et météo selon disponibilité. Les données sont validées avant publication dans `data/public-context.json`.
+
+Une panne externe ne doit jamais bloquer l’analyse TGM locale.
+
+## Causalité
+
+Une source externe n’est pas une preuve automatique. Le moteur conserve deux espaces distincts :
+
+- **restitution utilisateur** : uniquement causes franchissant les seuils de pertinence ;
+- **audit technique** : hypothèses testées mais rejetées.
+
+Les textes officiels utilisés comme preuves sont conservés séparément de l’interprétation Analysis.
+
+## Stockage local
+
+IndexedDB peut conserver une session importée et des snapshots synthétiques sur le poste utilisé. Le bouton **Effacer les données locales** supprime ce stockage applicatif.
+
+## Déploiement
+
+Ne jamais versionner de vraies extractions TGM dans un dépôt public. `config/store.json` contient une adresse de commerce non secrète mais doit être adapté au point de vente déployé.
+
+const CACHE = 'analysis-power-v5.1.0';
+const LOCAL_ASSETS = [
+  './','./index.html','./manifest.webmanifest','./css/styles.css','./css/power.css','./js/constants.js','./js/utils.js','./js/csv.js','./js/xlsx-lite.js','./js/importer.js',
+  './js/storage.js','./js/geo.js','./js/intelligence.js','./js/autopilot.js','./js/analytics.js','./js/public-context.js','./js/causal-context.js','./js/power.js','./js/ui.js','./js/app.js','./config/store.json','./data/public-context.json','./data/public-context-history.json'
+];
+self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(c => c.addAll(LOCAL_ASSETS)).then(() => self.skipWaiting())));
+self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  if (url.pathname.endsWith('/data/public-context.json') || url.pathname.endsWith('/data/public-context-history.json')) {
+    event.respondWith(fetch(event.request,{cache:'no-store'}).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put(event.request,copy)).catch(()=>{});return resp;}).catch(()=>caches.match(event.request)));
+    return;
+  }
+  event.respondWith(fetch(event.request).then(resp => {
+    const copy = resp.clone(); caches.open(CACHE).then(c => c.put(event.request, copy)).catch(()=>{}); return resp;
+  }).catch(()=>caches.match(event.request)));
+});
+
+ANALYSIS POWER 5.1 MERCHANT — RAPPORT DE VALIDATION
+
+Contrôles exécutés avant livraison :
+- test_public_context.py : OK
+- test_causal_context.js : OK
+- test_power_causality.js : OK
+- test_merchant_rules.js : OK
+- syntaxe JavaScript js/*.js + sw.js : OK
+- compilation Python scripts/*.py : OK
+- validation data/public-context.json : OK
+
+Régression sur les extractions TGM de référence (données non incluses dans le paquet) :
+- Clients lus : 1 341
+- Lignes de ventes : 15 446
+- Transactions reconstruites : 5 668
+- Références catalogue lues : 1 077
+- Diagnostics utiles générés : 29
+- Clients très en retard : 121
+- Produits / stocks à sécuriser : 59
+- Causes suffisamment solides visibles sur ce jeu : 1
+
+Contrôles commerçant-friendly :
+- un simple écart du nombre d'événements ne peut plus devenir une cause ;
+- un produit isolé ne peut pas être attribué directement à météo / travaux / parking / T2C / événements ;
+- un chantier qui commence après une baisse déjà installée n'est pas retenu sans aggravation observée autour de sa date ;
+- les scores causaux et calculs internes ne sont pas affichés dans les vues commerciales ;
+- une cause trop faible devient « Cause non identifiée » ;
+- les sources officielles restent consultables lorsqu'elles sont réellement utilisées.
+
+Limite de validation : l'environnement d'exécution bloque l'ouverture automatisée de pages locales dans Chromium par politique d'organisation. Les moteurs, imports, tests, syntaxe, ressources locales et règles de restitution ont été contrôlés séparément.
